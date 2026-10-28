@@ -1,10 +1,13 @@
 package gui;
 
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -58,6 +61,19 @@ public class MainApplicationFrame extends JFrame
                 confirmExit();
             }
         });
+
+        try
+        {
+            if (!WindowStateStore.restore(this, desktopPane))
+            {
+                setExtendedState(Frame.MAXIMIZED_BOTH);
+            }
+        }
+        catch (IOException | IllegalArgumentException | PropertyVetoException e)
+        {
+            Logger.error("Не удалось восстановить состояние окон: " + e.getMessage());
+            setExtendedState(Frame.MAXIMIZED_BOTH);
+        }
     }
 
     private void confirmExit()
@@ -71,6 +87,14 @@ public class MainApplicationFrame extends JFrame
             JOptionPane.QUESTION_MESSAGE);
         if (answer == JOptionPane.YES_OPTION)
         {
+            try
+            {
+                WindowStateStore.save(this, desktopPane);
+            }
+            catch (IOException e)
+            {
+                Logger.error("Не удалось сохранить состояние окон: " + e.getMessage());
+            }
             dispose();
         }
     }
